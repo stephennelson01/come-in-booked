@@ -1,8 +1,11 @@
-# db/migrate/XXXX_add_indexes.rb
 class AddIndexes < ActiveRecord::Migration[7.1]
   def change
-    add_index :businesses, :slug, unique: true
-    add_index :locations, :geo, using: :gist
-    add_index :locations, [:lat,:lng]
+    if table_exists?(:businesses) && !index_exists?(:businesses, :slug)
+      add_index :businesses, :slug, unique: true
+    end
+
+    if table_exists?(:locations) && !index_exists?(:locations, [:lat, :lng])
+      add_index :locations, [:lat, :lng]
+    end
   end
 end
