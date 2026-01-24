@@ -1,0 +1,162 @@
+<!-- HERO (deep blue) -->
+<section class="relative overflow-hidden">
+  <div class="absolute inset-0 -z-10"
+       style="background:
+         radial-gradient(1200px 700px at 20% -10%, rgba(59,130,246,0.25), transparent 65%),
+         radial-gradient(1200px 700px at 80% 0%, rgba(96,165,250,0.18), transparent 65%),
+         linear-gradient(180deg, #0b1b4a 0%, #0f245f 45%, #0b1b4a 100%);">
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 pt-24 pb-24 sm:pt-28 sm:pb-28 text-white">
+    <h1 class="font-display text-5xl sm:text-7xl leading-[1.05] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] text-center">
+      Book local beauty, style, fashion and<br class="hidden sm:block"> wellness services
+    </h1>
+
+    <!-- push the pill lower -->
+    <div class="mt-10 sm:mt-12"></div>
+
+    <!-- SEARCH PILL -->
+    <%= form_with url: search_path, method: :get, local: true,
+      html: { data: { controller: "searchbar" },
+              class: "mx-auto bg-white text-gray-900 rounded-[999px] shadow-2xl ring-1 ring-black/10 overflow-hidden max-w-5xl" } do %>
+
+      <div class="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-gray-200 items-stretch">
+        <!-- what -->
+        <label class="flex items-center gap-3 px-6 py-4 sm:w-1/3">
+          <span>🔎</span>
+          <input name="q" type="text" placeholder="All treatments and venues"
+                 class="w-full outline-none placeholder:text-gray-500 text-[15px]" />
+        </label>
+
+        <!-- where -->
+        <div class="flex items-center gap-3 px-6 py-4 sm:w-1/3">
+          <span>📍</span>
+          <input name="where" type="text" placeholder="Current location"
+                 data-searchbar-target="whereInput"
+                 class="w-full outline-none placeholder:text-gray-500 text-[15px]" />
+          <input type="hidden" name="lat" data-searchbar-target="lat">
+          <input type="hidden" name="lng" data-searchbar-target="lng">
+          <button type="button"
+                  class="ml-2 text-sm rounded-full px-3 py-1.5 border border-gray-300 hover:bg-gray-50"
+                  data-action="click->searchbar#useCurrent">
+            Use current
+          </button>
+        </div>
+
+        <!-- date -->
+        <label class="flex items-center gap-3 px-6 py-4 sm:w-1/6">
+          <span>📅</span>
+          <input name="date" type="date" class="w-full outline-none text-[15px]" />
+        </label>
+
+        <!-- time -->
+        <label class="flex items-center gap-3 px-6 py-4 sm:w-1/6">
+          <span>⏰</span>
+          <input name="time" type="time" class="w-full outline-none text-[15px]" />
+        </label>
+
+        <!-- submit -->
+        <div class="px-4 py-2 flex items-center justify-end">
+          <button class="rounded-full px-6 py-3 bg-blue-700 text-white hover:bg-blue-800 transition shadow">
+            Search
+          </button>
+        </div>
+      </div>
+    <% end %>
+
+    <p class="mt-6 text-center text-blue-100">
+      <span class="font-semibold"><%= number_with_delimiter(rand(280_000..420_000)) %></span> appointments booked today
+    </p>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="py-20">
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <h2 class="text-3xl sm:text-4xl font-display font-semibold">The top-rated destination for beauty and wellness</h2>
+    <p class="mt-3 text-gray-600">One solution, one software. Trusted by the best in the industry.</p>
+
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <div class="text-4xl font-extrabold text-blue-700">130,000+</div>
+        <div class="text-gray-600">partner businesses</div>
+      </div>
+      <div>
+        <div class="text-4xl font-extrabold text-blue-700">120+ countries</div>
+        <div class="text-gray-600">using ComeInBooked</div>
+      </div>
+      <div>
+        <div class="text-4xl font-extrabold text-blue-700">450,000+</div>
+        <div class="text-gray-600">stylists and professionals</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECOMMENDED -->
+<section class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-2xl sm:text-3xl font-semibold mb-6">Recommended</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <% 8.times do %>
+        <div class="bg-white rounded-xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+          <div class="aspect-[16/9] bg-gray-200"></div>
+          <div class="p-4">
+            <h3 class="font-semibold truncate">Business name</h3>
+            <p class="text-gray-600 text-sm truncate">City, Region</p>
+            <div class="mt-3">
+              <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs text-gray-700">Hair Salon</span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="py-16">
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-2xl sm:text-3xl font-semibold mb-6">Reviews</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <% 4.times do %>
+        <div class="bg-white rounded-xl p-6 shadow-sm ring-1 ring-black/5">
+          <div class="mb-2">★★★★★</div>
+          <h3 class="font-semibold mb-2">Great for finding barbers</h3>
+          <p class="text-gray-600 text-sm">“I’ve been using it for two years — best booking platform I’ve used.”</p>
+          <div class="mt-4 text-sm text-gray-500">— Reviewer, City</div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<!-- BROWSE BY CITY -->
+<section class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-2xl sm:text-3xl font-semibold mb-6">Browse by City</h2>
+
+    <!-- simple country pills -->
+    <div class="flex flex-wrap gap-2 mb-8">
+      <% ["United Kingdom", "United States", "Canada", "Ireland", "Australia", "Nigeria"].each_with_index do |c, i| %>
+        <button class="rounded-full border px-4 py-2 text-sm <%= i==0 ? 'bg-black text-white' : 'hover:bg-black/5' %>"><%= c %></button>
+      <% end %>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% ["London","Manchester","Birmingham","Leeds","Bristol","Glasgow","Liverpool","Edinburgh","Cardiff","Sheffield","Newcastle","Nottingham"].each do |city| %>
+        <div>
+          <h3 class="font-semibold"><%= city %></h3>
+          <ul class="mt-2 space-y-1 text-sm text-gray-600">
+            <li>Hair Salons in <%= city %></li>
+            <li>Nails in <%= city %></li>
+            <li>Barbers in <%= city %></li>
+            <li>Spas in <%= city %></li>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>

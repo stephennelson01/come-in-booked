@@ -23,3 +23,13 @@
 #   # Report violations without enforcing the policy.
 #   # config.content_security_policy_report_only = true
 # end
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    policy.font_src    :self, :https, "data:", "https://fonts.gstatic.com"
+    policy.style_src   :self, :https, :unsafe_inline, "https://fonts.googleapis.com"
+    policy.script_src  :self, :https
+    policy.img_src     :self, :https, :data
+    policy.connect_src :self, :https
+  end
+end

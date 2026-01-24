@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ComeInBooked — Merchant</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <!-- Tailwind CDN (prevents asset pipeline issues in merchant area) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="min-h-screen text-slate-100">
+    <!-- Background -->
+    <div class="fixed inset-0 -z-10">
+      <div class="absolute inset-0"
+        style="
+          background:
+            radial-gradient(1200px 700px at 15% 10%, rgba(47,102,255,0.28), transparent 60%),
+            radial-gradient(900px 560px at 85% 18%, rgba(124,58,237,0.22), transparent 62%),
+            linear-gradient(180deg, #0b1f46 0%, #07142c 100%);
+        ">
+      </div>
+      <div class="absolute inset-0 backdrop-blur-[2px]"></div>
+    </div>
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-50 border-b border-white/10 bg-[#0b1f46]/70 backdrop-blur">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="h-16 flex items-center justify-between">
+          <!-- Brand (goes home) -->
+          <%= link_to root_path, class: "flex items-center gap-2" do %>
+            <span class="text-xl font-semibold tracking-tight text-white">ComeInBooked</span>
+          <% end %>
+
+          <!-- Nav -->
+          <nav class="hidden md:flex items-center gap-2 text-sm">
+            <%= link_to "Dashboard", merchant_dashboard_path,
+                class: "px-3 py-2 rounded-lg hover:bg-white/10 text-white/90" %>
+
+            <%= link_to "Services", merchant_services_path,
+                class: "px-3 py-2 rounded-lg hover:bg-white/10 text-white/90" %>
+
+            <%# Only show if you actually have these routes/controllers %>
+            <% if respond_to?(:merchant_calendar_path) %>
+              <%= link_to "Calendar", merchant_calendar_path,
+                  class: "px-3 py-2 rounded-lg hover:bg-white/10 text-white/90" %>
+            <% end %>
+
+            <% if respond_to?(:merchant_clients_path) %>
+              <%= link_to "Clients", merchant_clients_path,
+                  class: "px-3 py-2 rounded-lg hover:bg-white/10 text-white/90" %>
+            <% end %>
+          </nav>
+
+          <!-- Right actions -->
+          <div class="flex items-center gap-3">
+            <%# Partner sign out path (supports either naming) %>
+            <% partner_sign_out =
+                 (respond_to?(:destroy_partner_session_path) ? destroy_partner_session_path :
+                  (respond_to?(:partners_sign_out_path) ? partners_sign_out_path : nil)) %>
+
+            <% if partner_sign_out && (defined?(partner_signed_in?) ? partner_signed_in? : true) %>
+              <%= button_to "Sign out",
+                  partner_sign_out,
+                  method: :delete,
+                  form: { class: "inline" },
+                  class: "px-4 py-2 rounded-full font-semibold text-white shadow-sm border border-white/20 hover:bg-white/10" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page -->
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+      <% if notice.present? %>
+        <div class="mb-6 rounded-2xl border border-emerald-200/30 bg-emerald-500/10 px-4 py-3 text-emerald-50">
+          <%= notice %>
+        </div>
+      <% end %>
+
+      <% if alert.present? %>
+        <div class="mb-6 rounded-2xl border border-rose-200/30 bg-rose-500/10 px-4 py-3 text-rose-50">
+          <%= alert %>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+  </body>
+</html>

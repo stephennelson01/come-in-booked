@@ -73,3 +73,26 @@ gem "redis", "~> 5.4"
 gem "hotwire-rails", "~> 0.1.3"
 
 gem "geocoder", "~> 1.8"
+
+gem "activerecord-postgis-adapter", "~> 9.0"
+gem "rgeo", "~> 3.0"
+
+gem "stripe", "~> 15.5"
+
+gem "dotenv-rails", "~> 3.1", :groups => [:development, :test]
+
+gem "tailwindcss-rails", "~> 4.3", :group => :development
+
+gem "importmap-rails"
+
+gem "sendgrid-ruby"
+
+gem "twilio-ruby"
+
+gem "omniauth"
+gem "omniauth-rails_csrf_protection"
+gem "omniauth-google-oauth2"
+gem "omniauth-apple"
+gem "recaptcha", require: "recaptcha/rails"
+gem "cloudinary"
+gem "activestorage-cloudinary-service"

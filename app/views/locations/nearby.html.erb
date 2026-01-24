@@ -1,0 +1,40 @@
+<h1>ComeInBooked — Nearby</h1>
+<button id="locate">Use my location</button>
+<input id="radius" type="number" min="1" value="5"> km
+<div id="results"></div>
+<div id="map" style="width:100%;height:400px;margin-top:1rem;"></div>
+
+<script>
+const MAPBOX_TOKEN = "<YOUR_MAPBOX_PUBLIC_TOKEN>";
+mapboxgl.accessToken = MAPBOX_TOKEN;
+const map = new mapboxgl.Map({container:'map', style:'mapbox://styles/mapbox/streets-v11', center:[-0.1276,51.5072], zoom:10});
+
+async function fetchNearby(lat,lng){
+  const r = await fetch(`/locations/nearby.json?lat=${lat}&lng=${lng}&radius_km=${document.getElementById('radius').value}`);
+  return r.json();
+}
+
+function renderList(locs){
+  const div = document.getElementById('results');
+  div.innerHTML = locs.map(l => `<div><strong>${l.address}</strong> — ${l.city || ''}</div>`).join('');
+}
+
+function renderPins(locs){
+  locs.forEach(l=>{
+    new mapboxgl.Marker().setLngLat([l.lng, l.lat]).addTo(map);
+  });
+  if(locs[0]) map.flyTo({center:[locs[0].lng, locs[0].lat], zoom:13});
+}
+
+document.getElementById('locate').addEventListener('click', async ()=>{
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    const locs = await fetchNearby(lat,lng);
+    renderList(locs); renderPins(locs);
+  }, async ()=>{
+    alert("Location blocked. Showing sample data.");
+    const locs = await fetchNearby(51.5072,-0.1276); // London fallback
+    renderList(locs); renderPins(locs);
+  });
+});
+</script>

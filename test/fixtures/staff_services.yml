@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  staff_member: one
+  service: one
+  price_override_cents: 1
+  duration_override_min: 1
+
+two:
+  staff_member: two
+  service: two
+  price_override_cents: 1
+  duration_override_min: 1

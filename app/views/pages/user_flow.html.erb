@@ -1,0 +1,75 @@
+<div class="min-h-screen bg-white">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+    <%= link_to "← Back", root_path, class: "text-slate-500 hover:text-slate-700 text-sm" %>
+
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div class="lg:col-span-7">
+        <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+          Sign up / log in
+        </h1>
+        <p class="mt-3 text-slate-600 max-w-xl">
+          Customers book services. Professionals manage bookings and payments.
+        </p>
+
+        <div class="mt-10 space-y-4">
+          <%= link_to new_user_session_path,
+              class: "group block w-full rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition bg-white" do %>
+            <div class="p-6 flex items-center gap-4">
+              <div class="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-xl">🧑🏽‍💻</div>
+              <div class="flex-1">
+                <p class="text-base font-semibold text-slate-900">ComeInBooked for customers</p>
+                <p class="mt-1 text-sm text-slate-600">Book beauty, wellness, creatives and local services</p>
+              </div>
+              <div class="shrink-0">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 group-hover:bg-slate-200 transition">
+                  <span class="text-slate-700">➜</span>
+                </span>
+              </div>
+            </div>
+          <% end %>
+
+          <%= link_to new_partner_session_path,
+              class: "group block w-full rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition bg-white" do %>
+            <div class="p-6 flex items-center gap-4">
+              <div class="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-xl">🏪</div>
+              <div class="flex-1">
+                <p class="text-base font-semibold text-slate-900">ComeInBooked for professionals</p>
+                <p class="mt-1 text-sm text-slate-600">Manage bookings, services, staff and payments</p>
+              </div>
+              <div class="shrink-0">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 group-hover:bg-slate-200 transition">
+                  <span class="text-slate-700">➜</span>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="mt-10 flex items-center gap-6 text-slate-500 text-sm">
+          <span>🌐 English</span>
+          <%= link_to "Help and support", support_path, class: "hover:text-slate-700" %>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="rounded-3xl p-8 border border-slate-200 overflow-hidden relative"
+             style="background:
+               radial-gradient(900px 500px at 20% 10%, rgba(47,102,255,0.20) 0%, rgba(11,31,70,0) 60%),
+               linear-gradient(180deg, #0b1f46 0%, #081733 100%);">
+          <p class="text-white/85 text-sm font-semibold">Welcome</p>
+          <h2 class="mt-3 text-2xl font-semibold text-white">Calm booking for modern businesses</h2>
+          <p class="mt-3 text-white/70 text-sm">
+            Simple now. Powerful later — bookings, payments, clients and growth tools.
+          </p>
+
+          <div class="mt-8 text-white/70 text-xs">
+            By continuing, you agree to our
+            <%= link_to "Terms", legal_terms_path, class: "underline decoration-white/30 hover:decoration-white" %>
+            and
+            <%= link_to "Privacy Policy", legal_privacy_path, class: "underline decoration-white/30 hover:decoration-white" %>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ComeInBooked Partners</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+  </head>
+
+  <body class="bg-slate-50 text-slate-900 antialiased" style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">
+    <!-- Partners top bar -->
+    <header class="sticky top-0 z-50 shadow-sm" style="background:#0b1f46;color:#fff;">
+      <div class="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between">
+        <%= link_to root_path, class: "font-semibold text-lg tracking-tight" do %>
+          ComeInBooked
+        <% end %>
+        <div class="text-sm opacity-80">
+          Partners
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="min-h-[calc(100vh-8rem)]">
+      <%= yield %>
+    </main>
+
+    <!-- Simple footer -->
+    <footer class="border-t bg-white">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 text-sm text-slate-500">
+        © <%= Time.current.year %> ComeInBooked • <%= link_to "Privacy", privacy_path, class: "hover:underline" %> • <%= link_to "Terms", terms_path, class: "hover:underline" %>
+      </div>
+    </footer>
+  </body>
+</html>

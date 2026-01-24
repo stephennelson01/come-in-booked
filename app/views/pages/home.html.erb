@@ -1,0 +1,157 @@
+<%# app/views/pages/home.html.erb %>
+
+<section class="relative overflow-hidden">
+  <!-- HERO BACKGROUND (video if present, otherwise gradient) -->
+  <div class="absolute inset-0">
+    <% begin %>
+      <video
+        class="hidden sm:block absolute inset-0 w-full h-full object-cover"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="<%= image_path('home/hero_poster.jpg') %>">
+        <source src="<%= asset_path('home/hero.mp4') %>" type="video/mp4">
+      </video>
+
+      <!-- Mobile fallback poster image -->
+      <div class="sm:hidden absolute inset-0 bg-cover bg-center"
+           style="background-image:url('<%= image_path('home/hero_poster.jpg') %>');"></div>
+
+    <% rescue Sprockets::Rails::Helper::AssetNotFound %>
+      <!-- Safe fallback if video/poster is missing -->
+      <div class="absolute inset-0"
+           style="background:
+             radial-gradient(1200px 600px at 18% 8%, rgba(47,102,255,0.22) 0%, rgba(11,31,70,0.00) 58%),
+             radial-gradient(900px 520px at 82% 18%, rgba(124,58,237,0.16) 0%, rgba(11,31,70,0.00) 58%),
+             linear-gradient(180deg, #0b1f46 0%, #081733 100%);">
+      </div>
+    <% end %>
+
+    <!-- Blur + dark overlay so text stays readable -->
+    <div class="absolute inset-0 backdrop-blur-[2px]"
+         style="background: linear-gradient(180deg, rgba(11,31,70,0.75) 0%, rgba(7,20,44,0.92) 100%);"></div>
+  </div>
+
+  <!-- HERO CONTENT -->
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-16">
+    <div class="max-w-3xl">
+      <p class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-white/85 border border-white/15 bg-white/5">
+        <span class="h-2 w-2 rounded-full" style="background:#2f66ff;"></span>
+        Built for small businesses, brands & creatives
+      </p>
+
+      <h1 class="mt-6 text-4xl sm:text-5xl font-semibold tracking-tight text-white">
+        Book local beauty, style, fashion and<br class="hidden sm:block" />
+        wellness services
+      </h1>
+
+      <p class="mt-5 text-white/75 text-lg">
+        ComeInBooked helps people discover and book trusted services — from barbers and salons to designers and photographers.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row gap-3">
+        <%= link_to "Explore services", search_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white shadow-sm",
+          style: "background:#2f66ff;" %>
+
+        <%= link_to "List your business", for_business_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 bg-white/10 text-white hover:bg-white/15" %>
+      </div>
+
+      <!-- Search bar (inside hero, lower) -->
+      <div class="mt-10">
+        <form action="<%= search_path %>" method="get"
+              class="w-full max-w-2xl rounded-2xl border border-white/15 bg-white/8 backdrop-blur px-4 py-4 sm:px-5 sm:py-5">
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div class="flex-1">
+              <label class="block text-xs text-white/70 mb-1">What are you looking for?</label>
+              <input name="q" type="text"
+                     placeholder="e.g. barber, lashes, makeup, designer"
+                     class="w-full rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/50 px-4 py-3 focus:outline-none focus:ring-2"
+                     style="--tw-ring-color:#2f66ff;" />
+            </div>
+
+            <div class="flex-1">
+              <label class="block text-xs text-white/70 mb-1">Near</label>
+              <input name="near" type="text"
+                     placeholder="City or ‘near me’"
+                     class="w-full rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/50 px-4 py-3 focus:outline-none focus:ring-2"
+                     style="--tw-ring-color:#2f66ff;" />
+            </div>
+
+            <button type="submit"
+                    class="sm:self-end rounded-xl px-5 py-3 font-semibold text-white shadow-sm"
+                    style="background:#2f66ff;">
+              Search
+            </button>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/70">
+            <span class="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">Beauty & wellness</span>
+            <span class="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">Fashion</span>
+            <span class="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">Brands & creatives</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="mt-10 flex flex-wrap items-center gap-6 text-white/70 text-sm">
+        <span class="inline-flex items-center gap-2">⭐ Reviews (coming soon)</span>
+        <span class="inline-flex items-center gap-2">📍 Nearby discovery (coming soon)</span>
+        <span class="inline-flex items-center gap-2">💳 Payments ready</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES SECTION (sharp images) -->
+<section class="bg-white border-t border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+
+    <div class="flex items-end justify-between gap-6">
+      <div>
+        <h2 class="text-2xl font-semibold text-slate-900">Browse by category</h2>
+        <p class="mt-2 text-slate-600">Find trusted businesses and book in minutes.</p>
+      </div>
+
+      <%= link_to "See all", search_path, class: "text-blue-700 hover:underline font-medium" %>
+    </div>
+
+    <% categories = [
+      { key: "barber",      label: "Barbers" },
+      { key: "salon",       label: "Salons" },
+      { key: "lashes",      label: "Lashes" },
+      { key: "nails",       label: "Nails" },
+      { key: "wigs",        label: "Wigs" },
+      { key: "spa",         label: "Spa & massage" },
+      { key: "designer",    label: "Fashion designer" },
+      { key: "photography", label: "Photography" }
+    ] %>
+
+    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <% categories.each do |c| %>
+        <%= link_to search_path(q: c[:label]), class: "group block" do %>
+          <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 aspect-[4/3]">
+
+            <%= image_tag "home/categories/#{c[:key]}.jpg",
+              alt: c[:label],
+              class: "absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.05]",
+              loading: "lazy",
+              decoding: "async" %>
+
+            <div class="absolute inset-0"
+                 style="background: linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.65) 100%);"></div>
+
+            <div class="absolute bottom-0 left-0 right-0 p-3">
+              <p class="text-white font-semibold text-sm"><%= c[:label] %></p>
+              <p class="text-white/75 text-xs">Tap to explore</p>
+            </div>
+
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+  </div>
+</section>

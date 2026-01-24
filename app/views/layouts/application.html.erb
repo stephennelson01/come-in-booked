@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Comeinbooked</title>
+    <title>ComeInBooked</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <!-- Premium CSS layer (works WITH Tailwind) -->
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+
+    <!-- Tailwind -->
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+
+    <!-- Mapbox token (safe even if unused) -->
+    <script>
+      mapboxgl && (mapboxgl.accessToken = "<%= ENV['MAPBOX_ACCESS_TOKEN'] %>");
+    </script>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="bg-white text-slate-900 antialiased">
+    <%= render "shared/navbar" %>
+    <%= render "shared/flash" %>
+
+    <main>
+      <%= yield %>
+    </main>
+
+    <%= render "shared/footer" %>
   </body>
 </html>

@@ -1,0 +1,128 @@
+<div class="flex flex-col gap-8">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-semibold text-white">Merchant dashboard</h1>
+      <p class="mt-2 text-white/70">
+        Manage your services, bookings, and growth — in one calm place.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <%= link_to "Add service", new_merchant_service_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white shadow-lg hover:scale-[1.01] transition",
+          style: "background:#2f66ff;" %>
+
+      <%= link_to "View services", merchant_services_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white hover:bg-white/10" %>
+
+      <%= link_to "Bookings", merchant_bookings_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white hover:bg-white/10" %>
+
+      <%= link_to "Calendar", merchant_calendar_path,
+          class: "inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold border border-white/20 text-white hover:bg-white/10" %>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow-sm">
+      <p class="text-sm font-semibold text-white/70">Services</p>
+      <p class="mt-2 text-4xl font-semibold text-white">
+        <%= @business&.services&.count.to_i %>
+      </p>
+      <p class="mt-2 text-sm text-white/60">Create, edit, and deactivate anytime.</p>
+      <div class="mt-5">
+        <%= link_to "Manage services →", merchant_services_path,
+            class: "font-semibold",
+            style: "color:#9db4ff;" %>
+      </div>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow-sm">
+      <p class="text-sm font-semibold text-white/70">Bookings</p>
+      <p class="mt-2 text-4xl font-semibold text-white">
+        <%= @business&.bookings&.count.to_i %>
+      </p>
+      <p class="mt-2 text-sm text-white/60">New bookings show up like messages below.</p>
+      <div class="mt-5">
+        <%= link_to "View bookings →", merchant_bookings_path,
+            class: "font-semibold",
+            style: "color:#9db4ff;" %>
+      </div>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow-sm">
+      <p class="text-sm font-semibold text-white/70">Revenue</p>
+      <p class="mt-2 text-4xl font-semibold text-white">£0</p>
+      <p class="mt-2 text-sm text-white/60">Stripe deposits will fill this later.</p>
+      <div class="mt-5 text-sm text-white/50">
+        Coming soon
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ BOOKINGS INBOX (Messages) -->
+  <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-8">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="text-white/70 text-sm font-semibold">Bookings inbox</p>
+        <h2 class="mt-2 text-lg font-semibold text-white">Recent bookings</h2>
+        <p class="mt-1 text-sm text-white/70">
+          New bookings show here like messages. Click one to view full details.
+        </p>
+      </div>
+
+      <%= link_to "View all",
+          merchant_bookings_path,
+          class: "text-sm font-semibold text-white/90 hover:text-white underline decoration-white/30 hover:decoration-white/70" %>
+    </div>
+
+    <div class="mt-6 space-y-3">
+      <% if @recent_bookings.present? %>
+        <% start_col = Booking.column_names.include?("starts_at") ? "starts_at" : "start_at" %>
+
+        <% @recent_bookings.each do |b| %>
+          <% starts_at = b[start_col] %>
+          <% svc = b.booking_items.first&.service %>
+          <% unread = b.respond_to?(:read_by_partner_at) && b.read_by_partner_at.nil? %>
+
+          <%= link_to merchant_booking_path(b),
+              class: "block rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-4" do %>
+
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-white font-semibold truncate">
+                  <%= b.customer_name.presence || "Customer" %>
+                </p>
+
+                <p class="mt-1 text-white/70 text-sm truncate">
+                  <%= svc&.name || "Service booking" %>
+                  <span class="text-white/40">·</span>
+                  <%= starts_at ? starts_at.strftime("%a %d %b, %H:%M") : "Time not set" %>
+                </p>
+              </div>
+
+              <div class="shrink-0 flex items-center gap-2">
+                <span class="rounded-full px-3 py-1 text-xs font-semibold border border-white/15 text-white/80">
+                  <%= b.status.to_s.capitalize %>
+                </span>
+
+                <% if unread %>
+                  <span class="rounded-full px-2 py-0.5 text-[11px] font-bold bg-blue-500/90 text-white">
+                    NEW
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+          <% end %>
+        <% end %>
+      <% else %>
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70">
+          No bookings yet — once customers book, they’ll appear here.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

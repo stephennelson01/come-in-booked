@@ -1,0 +1,4 @@
+<h1><%= params[:city_slug].titleize %> — <%= params[:category_slug].titleize %></h1>
+<% @locations.each do |loc| %>
+  <div><%= loc.business.name %> — <%= [loc.address, loc.city].compact.join(", ") %></div>
+<% end %>

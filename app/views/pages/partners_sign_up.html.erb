@@ -1,0 +1,82 @@
+<div class="min-h-screen bg-slate-50">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+    <%= link_to "← Back", partners_sign_in_path, class: "text-slate-500 hover:text-slate-700 text-sm" %>
+
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div class="lg:col-span-7">
+        <div class="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm">
+          <p class="text-sm font-semibold text-slate-700">ComeInBooked for professionals</p>
+          <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Create your business account</h1>
+          <p class="mt-2 text-slate-600">
+            Set up your business profile and start taking bookings.
+          </p>
+
+          <form class="mt-8 space-y-5" action="<%= partners_sign_up_path %>" method="post">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Business name</label>
+                <input name="business_name" type="text" placeholder="e.g. Glow Studio"
+                       class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 focus:outline-none focus:ring-2"
+                       style="--tw-ring-color:#2f66ff;">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <input name="category" type="text" placeholder="Salon, Photography, Brand..."
+                       class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 focus:outline-none focus:ring-2"
+                       style="--tw-ring-color:#2f66ff;">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input name="email" type="email" placeholder="you@business.com"
+                     class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 focus:outline-none focus:ring-2"
+                     style="--tw-ring-color:#2f66ff;">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input name="password" type="password" placeholder="••••••••"
+                     class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 focus:outline-none focus:ring-2"
+                     style="--tw-ring-color:#2f66ff;">
+            </div>
+
+            <button type="submit"
+                    class="w-full rounded-xl px-5 py-3 font-semibold text-white shadow-sm"
+                    style="background:#2f66ff;">
+              Create account
+            </button>
+
+            <p class="text-xs text-slate-500">
+              By creating an account you agree to our
+              <%= link_to "Terms", legal_terms_path, class: "underline" %>
+              and
+              <%= link_to "Privacy Policy", legal_privacy_path, class: "underline" %>.
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="rounded-3xl p-8 border border-slate-200 bg-white shadow-sm">
+          <h2 class="text-xl font-semibold text-slate-900">What you’ll set up next</h2>
+          <div class="mt-5 space-y-3 text-sm text-slate-700">
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">1) Add your services</div>
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">2) Set your availability</div>
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">3) Start taking bookings</div>
+          </div>
+
+          <div class="mt-8 rounded-2xl p-5 text-white"
+               style="background: linear-gradient(135deg, #0b1f46 0%, #0f2d60 60%, #2f66ff 140%);">
+            <p class="text-sm font-semibold">Friendly note</p>
+            <p class="mt-2 text-white/85 text-sm">
+              We’ll keep it simple. You can add advanced tools later.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

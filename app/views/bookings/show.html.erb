@@ -1,0 +1,33 @@
+<div class="min-h-screen bg-white">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-14">
+    <p class="text-sm font-semibold text-slate-600">Booking confirmation</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">You’re booked 🎉</h1>
+
+    <div class="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-7">
+      <p class="text-slate-700">
+        <span class="font-semibold">When:</span>
+        <%= @booking.starts_at.strftime("%A, %d %b %Y at %H:%M") %>
+        – <%= @booking.ends_at.strftime("%H:%M") %>
+      </p>
+
+      <p class="mt-2 text-slate-700">
+        <span class="font-semibold">Status:</span>
+        <%= @booking.status %>
+      </p>
+
+      <p class="mt-2 text-slate-700">
+        <span class="font-semibold">Total:</span>
+        £<%= (@booking.total_cents.to_i / 100.0) %>
+      </p>
+    </div>
+
+    <div class="mt-8 flex gap-3">
+      <%= link_to "Book another service", venue_services_path(@booking.business.slug),
+          class: "rounded-full px-6 py-3 font-semibold text-white",
+          style: "background:#0b1f46;" %>
+
+      <%= link_to "Back home", root_path,
+          class: "rounded-full px-6 py-3 font-semibold border border-slate-200 hover:bg-slate-50" %>
+    </div>
+  </div>
+</div>

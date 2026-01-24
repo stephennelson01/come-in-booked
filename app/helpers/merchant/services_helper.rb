@@ -1,0 +1,2 @@
+module Merchant::ServicesHelper
+end

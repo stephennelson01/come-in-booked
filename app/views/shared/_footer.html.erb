@@ -1,0 +1,46 @@
+<footer class="border-t border-slate-200 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+      <div>
+        <p class="text-lg font-semibold text-slate-900">ComeInBooked</p>
+        <p class="mt-2 text-slate-600 text-sm">
+          A calm, modern way for small businesses and brands to take bookings and get paid.
+        </p>
+        <p class="mt-4 text-xs text-slate-500">
+          Discover and book trusted local services — from barbers and salons to designers and creatives.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-slate-900 mb-3">Company</h3>
+        <ul class="space-y-2 text-sm text-slate-600">
+          <li><%= link_to "For Business", for_business_path, class: "hover:underline" %></li>
+          <li><%= link_to "Support", support_path, class: "hover:underline" %></li>
+          <li><%= link_to "Blog", blog_path, class: "hover:underline" %></li>
+          <li><%= link_to "Browse", browse_path, class: "hover:underline" %></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-slate-900 mb-3">Discover</h3>
+        <ul class="space-y-2 text-sm text-slate-600">
+          <li><%= link_to "Search", search_path, class: "hover:underline" %></li>
+          <li><%= link_to "Status", status_path, class: "hover:underline" %></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-slate-900 mb-3">Legal</h3>
+        <ul class="space-y-2 text-sm text-slate-600">
+          <li><%= link_to "Privacy", legal_privacy_path, class: "hover:underline" %></li>
+          <li><%= link_to "Terms", legal_terms_path, class: "hover:underline" %></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs text-slate-500">
+      <p>© <%= Time.current.year %> ComeInBooked. All rights reserved.</p>
+      <p class="opacity-80">Made for small businesses ✨</p>
+    </div>
+  </div>
+</footer>
