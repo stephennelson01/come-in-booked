@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Brand colors - Deep Blue palette */
+  --color-brand-50: #e6edf5;
+  --color-brand-100: #c2d3e6;
+  --color-brand-200: #9ab8d4;
+  --color-brand-300: #729dc2;
+  --color-brand-400: #4a82b0;
+  --color-brand-500: #3673ab;
+  --color-brand-600: #1e3a5f;
+  --color-brand-700: #172e4d;
+  --color-brand-800: #10223b;
+  --color-brand-900: #0a1628;
+  --color-brand-950: #050b14;
+
+  /* Sidebar colors */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  /* Chart colors */
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  /* UI colors */
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Border radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Light mode - white background with deep blue accents */
+  --background: #ffffff;
+  --foreground: #0a1628;
+  --card: #ffffff;
+  --card-foreground: #0a1628;
+  --popover: #ffffff;
+  --popover-foreground: #0a1628;
+
+  /* Primary - Deep Blue brand color */
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #e6edf5;
+  --secondary-foreground: #1e3a5f;
+
+  /* Muted */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  /* Accent */
+  --accent: #e6edf5;
+  --accent-foreground: #1e3a5f;
+
+  /* Destructive */
+  --destructive: #ef4444;
+
+  /* Border/Input */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #3673ab;
+
+  /* Charts */
+  --chart-1: #1e3a5f;
+  --chart-2: #3673ab;
+  --chart-3: #4a82b0;
+  --chart-4: #729dc2;
+  --chart-5: #9ab8d4;
+
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a1628;
+  --sidebar-primary: #1e3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6edf5;
+  --sidebar-accent-foreground: #1e3a5f;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #3673ab;
+}
+
+.dark {
+  /* Dark mode - deep blue background */
+  --background: #0a1628;
+  --foreground: #f8fafc;
+  --card: #172e4d;
+  --card-foreground: #f8fafc;
+  --popover: #172e4d;
+  --popover-foreground: #f8fafc;
+
+  /* Primary - lighter blue in dark mode */
+  --primary: #3673ab;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #1e3a5f;
+  --secondary-foreground: #f8fafc;
+
+  /* Muted */
+  --muted: #1e3a5f;
+  --muted-foreground: #94a3b8;
+
+  /* Accent */
+  --accent: #1e3a5f;
+  --accent-foreground: #f8fafc;
+
+  /* Destructive */
+  --destructive: #f87171;
+
+  /* Border/Input */
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #4a82b0;
+
+  /* Charts */
+  --chart-1: #4a82b0;
+  --chart-2: #3673ab;
+  --chart-3: #729dc2;
+  --chart-4: #9ab8d4;
+  --chart-5: #c2d3e6;
+
+  /* Sidebar */
+  --sidebar: #172e4d;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #3673ab;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #4a82b0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Hero slow zoom animation */
+@keyframes hero-zoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-hero-zoom {
+  animation: hero-zoom 20s ease-out forwards;
+}
