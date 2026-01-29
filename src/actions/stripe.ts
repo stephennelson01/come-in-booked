@@ -1,6 +1,6 @@
 "use server";
 
-import { stripe } from "@/lib/stripe/config";
+import { getStripe } from "@/lib/stripe/config";
 
 interface CreatePaymentIntentParams {
   amount: number; // in cents
@@ -20,7 +20,7 @@ export async function createPaymentIntent({
   applicationFeeAmount,
 }: CreatePaymentIntentParams) {
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount,
       currency,
       automatic_payment_methods: {
@@ -48,7 +48,7 @@ export async function createPaymentIntent({
 
 export async function createConnectAccount(email: string, businessName: string) {
   try {
-    const account = await stripe.accounts.create({
+    const account = await getStripe().accounts.create({
       type: "express",
       email,
       business_type: "individual",
@@ -74,7 +74,7 @@ export async function createConnectAccountLink(
   returnUrl: string
 ) {
   try {
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await getStripe().accountLinks.create({
       account: accountId,
       refresh_url: refreshUrl,
       return_url: returnUrl,
@@ -90,7 +90,7 @@ export async function createConnectAccountLink(
 
 export async function getConnectAccountStatus(accountId: string) {
   try {
-    const account = await stripe.accounts.retrieve(accountId);
+    const account = await getStripe().accounts.retrieve(accountId);
 
     return {
       chargesEnabled: account.charges_enabled,
@@ -110,7 +110,7 @@ export async function createRefund(
   reason?: "duplicate" | "fraudulent" | "requested_by_customer"
 ) {
   try {
-    const refund = await stripe.refunds.create({
+    const refund = await getStripe().refunds.create({
       payment_intent: paymentIntentId,
       amount,
       reason,
@@ -129,7 +129,7 @@ export async function createRefund(
 
 export async function createCustomer(email: string, name?: string) {
   try {
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email,
       name,
     });
