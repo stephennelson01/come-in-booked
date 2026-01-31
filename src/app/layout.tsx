@@ -37,6 +37,11 @@ export const metadata: Metadata = {
     "Nigeria",
     "Lagos",
   ],
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   openGraph: {
     title: "ComeInBooked - Book Local Services",
     description:
