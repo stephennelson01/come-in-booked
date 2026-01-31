@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Calendar, LogOut, Settings, Store } from "lucide-react";
@@ -101,6 +102,13 @@ export function Navbar() {
       <nav className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
+          <Image
+            src="/logo.png"
+            alt="ComeInBooked"
+            width={36}
+            height={36}
+            className="rounded-lg"
+          />
           <span className="text-xl font-bold text-primary">ComeInBooked</span>
         </Link>
 
