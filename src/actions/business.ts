@@ -153,7 +153,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
   };
 }
 
-// Create a new business
+// Create a new business (for authenticated users)
 export async function createBusiness(data: {
   name: string;
   category: string;
@@ -184,6 +184,66 @@ export async function createBusiness(data: {
     return { success: false, error: "Not authenticated" };
   }
 
+  return createBusinessInternal(supabase, user.id, user.email || data.email, data);
+}
+
+// Create a business for a newly signed up user (before cookies are set)
+export async function createBusinessForNewUser(
+  userId: string,
+  userEmail: string,
+  data: {
+    name: string;
+    category: string;
+    description?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address_line1: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country?: string;
+  }
+): Promise<{
+  success: boolean;
+  business?: Business;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, error: "Database not configured" };
+  }
+
+  return createBusinessInternal(supabase, userId, userEmail, data);
+}
+
+// Internal function to create business
+async function createBusinessInternal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  userEmail: string | undefined,
+  data: {
+    name: string;
+    category: string;
+    description?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address_line1: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country?: string;
+  }
+): Promise<{
+  success: boolean;
+  business?: Business;
+  error?: string;
+}> {
+  if (!supabase) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Generate slug from name
   const baseSlug = data.name
     .toLowerCase()
@@ -210,13 +270,13 @@ export async function createBusiness(data: {
   const { data: business, error: businessError } = await supabase
     .from("businesses")
     .insert({
-      owner_id: user.id,
+      owner_id: userId,
       name: data.name,
       slug,
       description: data.description,
       category: data.category,
       phone: data.phone,
-      email: data.email || user.email,
+      email: data.email || userEmail,
       website: data.website,
     })
     .select()

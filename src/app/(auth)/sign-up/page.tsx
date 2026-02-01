@@ -20,7 +20,7 @@ import {
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { createBusiness } from "@/actions/business";
+import { createBusinessForNewUser } from "@/actions/business";
 
 const BUSINESS_CATEGORIES = [
   { value: "hair-salon", label: "Hair Salon" },
@@ -117,16 +117,20 @@ function SignUpFormContent() {
       // For business accounts, create the business after successful signup
       if (isBusiness && authData?.user) {
         const businessData = data as BusinessForm;
-        const businessResult = await createBusiness({
-          name: businessData.businessName,
-          category: businessData.category,
-          phone: businessData.phone,
-          email: businessData.email,
-          address_line1: businessData.address,
-          city: businessData.city,
-          state: businessData.state,
-          postal_code: "",
-        });
+        const businessResult = await createBusinessForNewUser(
+          authData.user.id,
+          authData.user.email || businessData.email,
+          {
+            name: businessData.businessName,
+            category: businessData.category,
+            phone: businessData.phone,
+            email: businessData.email,
+            address_line1: businessData.address,
+            city: businessData.city,
+            state: businessData.state,
+            postal_code: "",
+          }
+        );
 
         if (!businessResult.success) {
           toast.error(businessResult.error || "Failed to create business");
