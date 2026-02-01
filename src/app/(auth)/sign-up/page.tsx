@@ -10,11 +10,39 @@ import { Loader2, Store, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { createBusiness } from "@/actions/business";
 
-const signUpSchema = z
+const BUSINESS_CATEGORIES = [
+  { value: "hair-salon", label: "Hair Salon" },
+  { value: "barber-shop", label: "Barber Shop" },
+  { value: "spa-wellness", label: "Spa & Wellness" },
+  { value: "nail-salon", label: "Nail Salon" },
+  { value: "beauty-makeup", label: "Beauty & Makeup" },
+  { value: "photography", label: "Photography" },
+  { value: "fitness-gym", label: "Fitness & Gym" },
+  { value: "medical-dental", label: "Medical & Dental" },
+  { value: "other", label: "Other" },
+];
+
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+  "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu",
+  "FCT", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi",
+  "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun",
+  "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
+];
+
+const customerSchema = z
   .object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email"),
@@ -27,7 +55,27 @@ const signUpSchema = z
     path: ["confirmPassword"],
   });
 
-type SignUpForm = z.infer<typeof signUpSchema>;
+const businessSchema = z
+  .object({
+    fullName: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Please enter a valid email"),
+    phone: z.string().min(10, "Please enter a valid phone number"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+    businessName: z.string().min(2, "Business name is required"),
+    category: z.string().min(1, "Please select a category"),
+    address: z.string().min(5, "Address is required"),
+    city: z.string().min(2, "City is required"),
+    state: z.string().min(1, "Please select a state"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type CustomerForm = z.infer<typeof customerSchema>;
+type BusinessForm = z.infer<typeof businessSchema>;
+type SignUpForm = CustomerForm | BusinessForm;
 
 function SignUpFormContent() {
   const router = useRouter();
@@ -41,10 +89,15 @@ function SignUpFormContent() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SignUpForm>({
-    resolver: zodResolver(signUpSchema),
+    resolver: zodResolver(isBusiness ? businessSchema : customerSchema),
   });
+
+  const selectedCategory = watch("category" as keyof SignUpForm);
+  const selectedState = watch("state" as keyof SignUpForm);
 
   const onSubmit = async (data: SignUpForm) => {
     setIsLoading(true);
@@ -57,23 +110,46 @@ function SignUpFormContent() {
       });
       if (error) {
         toast.error(error.message);
-      } else {
-        // Check if user is immediately confirmed (no email verification required)
-        if (authData?.session) {
-          toast.success("Account created successfully!");
-          // Redirect based on role
-          if (isBusiness) {
-            router.push("/merchant");
-          } else {
-            router.push("/customer");
-          }
-        } else {
-          // Email verification required
-          toast.success("Check your email to confirm your account");
-          router.push("/sign-in");
-        }
-        router.refresh();
+        setIsLoading(false);
+        return;
       }
+
+      // For business accounts, create the business after successful signup
+      if (isBusiness && authData?.user) {
+        const businessData = data as BusinessForm;
+        const businessResult = await createBusiness({
+          name: businessData.businessName,
+          category: businessData.category,
+          phone: businessData.phone,
+          email: businessData.email,
+          address_line1: businessData.address,
+          city: businessData.city,
+          state: businessData.state,
+          postal_code: "",
+        });
+
+        if (!businessResult.success) {
+          toast.error(businessResult.error || "Failed to create business");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Check if user is immediately confirmed (no email verification required)
+      if (authData?.session) {
+        toast.success("Account created successfully!");
+        // Redirect based on role
+        if (isBusiness) {
+          router.push("/merchant/services");
+        } else {
+          router.push("/customer");
+        }
+      } else {
+        // Email verification required
+        toast.success("Check your email to confirm your account");
+        router.push("/sign-in");
+      }
+      router.refresh();
     } catch {
       toast.error("An unexpected error occurred");
     } finally {
@@ -186,7 +262,7 @@ function SignUpFormContent() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (optional)</Label>
+              <Label htmlFor="phone">Phone Number{isBusiness ? "" : " (optional)"}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -198,6 +274,119 @@ function SignUpFormContent() {
                 For SMS booking confirmations
               </p>
             </div>
+
+            {isBusiness && (
+              <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Business Details
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">Business Name</Label>
+                  <Input
+                    id="businessName"
+                    placeholder="e.g., Bella's Hair Studio"
+                    {...register("businessName" as keyof SignUpForm)}
+                    disabled={isLoading}
+                  />
+                  {(errors as Record<string, { message?: string }>).businessName && (
+                    <p className="text-sm text-destructive">
+                      {(errors as Record<string, { message?: string }>).businessName?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={selectedCategory as string}
+                    onValueChange={(value) => setValue("category" as keyof SignUpForm, value as never)}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUSINESS_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(errors as Record<string, { message?: string }>).category && (
+                    <p className="text-sm text-destructive">
+                      {(errors as Record<string, { message?: string }>).category?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Business Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="e.g., 15 Allen Avenue"
+                    {...register("address" as keyof SignUpForm)}
+                    disabled={isLoading}
+                  />
+                  {(errors as Record<string, { message?: string }>).address && (
+                    <p className="text-sm text-destructive">
+                      {(errors as Record<string, { message?: string }>).address?.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      placeholder="e.g., Ikeja"
+                      {...register("city" as keyof SignUpForm)}
+                      disabled={isLoading}
+                    />
+                    {(errors as Record<string, { message?: string }>).city && (
+                      <p className="text-sm text-destructive">
+                        {(errors as Record<string, { message?: string }>).city?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State</Label>
+                    <Select
+                      value={selectedState as string}
+                      onValueChange={(value) => setValue("state" as keyof SignUpForm, value as never)}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger id="state">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NIGERIAN_STATES.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(errors as Record<string, { message?: string }>).state && (
+                      <p className="text-sm text-destructive">
+                        {(errors as Record<string, { message?: string }>).state?.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -228,7 +417,7 @@ function SignUpFormContent() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
+              {isBusiness ? "Create Business Account" : "Create Account"}
             </Button>
           </form>
 

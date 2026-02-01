@@ -60,17 +60,8 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     await loadBusiness();
   }, [loadBusiness]);
 
-  // Show loading while checking business
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Allow access to onboarding page even without business
-  if (!business && !pathname.includes("/merchant/onboarding")) {
+  // Show loading only briefly while checking, allow onboarding page through
+  if (loading && !pathname.includes("/merchant/onboarding")) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
