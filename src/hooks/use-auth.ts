@@ -76,7 +76,7 @@ export function useAuth() {
   const signUp = async (
     email: string,
     password: string,
-    metadata?: { full_name?: string; role?: string }
+    metadata?: { full_name?: string; role?: string; phone?: string | null }
   ) => {
     const supabase = createClient();
     if (!supabase) {
