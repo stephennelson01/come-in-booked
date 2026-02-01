@@ -18,6 +18,7 @@ const signUpSchema = z
   .object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email"),
+    phone: z.string().optional(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
@@ -51,6 +52,7 @@ function SignUpFormContent() {
       const role = isBusiness ? "partner" : "customer";
       const { error, data: authData } = await signUp(data.email, data.password, {
         full_name: data.fullName,
+        phone: data.phone || null,
         role: role,
       });
       if (error) {
@@ -182,6 +184,19 @@ function SignUpFormContent() {
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number (optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="0801 234 5678"
+                {...register("phone")}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                For SMS booking confirmations
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
