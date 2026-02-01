@@ -10,6 +10,7 @@ const createServiceSchema = z.object({
   duration_minutes: z.number().int().min(5, "Duration must be at least 5 minutes").max(480),
   price: z.number().min(0, "Price must be non-negative"),
   category: z.string().max(100).optional(),
+  image_url: z.string().url().optional().nullable(),
 });
 
 const updateServiceSchema = z.object({
@@ -18,6 +19,7 @@ const updateServiceSchema = z.object({
   duration_minutes: z.number().int().min(5).max(480).optional(),
   price: z.number().min(0).optional(),
   category: z.string().max(100).optional(),
+  image_url: z.string().url().optional().nullable(),
   is_active: z.boolean().optional(),
   sort_order: z.number().int().min(0).optional(),
 });
@@ -31,6 +33,7 @@ export interface Service {
   price: number;
   currency: string;
   category: string | null;
+  image_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -114,6 +117,7 @@ export async function createService(data: {
   duration_minutes: number;
   price: number;
   category?: string;
+  image_url?: string | null;
 }): Promise<{
   success: boolean;
   service?: Service;
@@ -167,6 +171,7 @@ export async function createService(data: {
       price: data.price,
       currency: "NGN",
       category: data.category,
+      image_url: data.image_url || null,
       is_active: true,
       sort_order: (maxSort?.sort_order || 0) + 1,
     })
@@ -190,6 +195,7 @@ export async function updateService(
     duration_minutes: number;
     price: number;
     category: string;
+    image_url: string | null;
     is_active: boolean;
     sort_order: number;
   }>
