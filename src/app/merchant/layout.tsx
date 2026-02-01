@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { MerchantSidebar } from "@/components/merchant/sidebar";
+import { BusinessProvider } from "@/components/merchant/business-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +19,9 @@ export default function MerchantLayout({
     <div className="min-h-screen bg-muted/30">
       <MerchantSidebar />
       <main className="pt-14 md:ml-64 md:pt-0">
-        <div className="p-4 md:p-8">{children}</div>
+        <div className="p-4 md:p-8">
+          <BusinessProvider>{children}</BusinessProvider>
+        </div>
       </main>
     </div>
   );
