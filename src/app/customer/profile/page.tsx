@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, User, Bell, Shield, CreditCard } from "lucide-react";
+import { Loader2, User, Bell, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -23,16 +25,18 @@ const profileSchema = z.object({
 
 type ProfileForm = z.infer<typeof profileSchema>;
 
-// Mock user data
-const mockUser = {
-  id: "1",
-  email: "john@example.com",
-  full_name: "John Doe",
-  phone: "(555) 123-4567",
-  avatar_url: null,
-};
+interface Profile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+}
 
 export default function ProfilePage() {
+  const { user } = useAuth();
+  const [profile, setProfile] = React.useState<Profile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const [emailNotifications, setEmailNotifications] = React.useState(true);
   const [smsNotifications, setSmsNotifications] = React.useState(true);
@@ -42,22 +46,78 @@ export default function ProfilePage() {
     register,
     handleSubmit,
     formState: { errors, isDirty },
+    reset,
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      fullName: mockUser.full_name || "",
-      email: mockUser.email,
-      phone: mockUser.phone || "",
-    },
   });
 
+  // Load profile data
+  React.useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setProfile(data);
+        reset({
+          fullName: data.full_name || "",
+          email: data.email,
+          phone: data.phone || "",
+        });
+      }
+      setIsLoadingProfile(false);
+    };
+
+    loadProfile();
+  }, [user, reset]);
+
   const onSubmit = async (data: ProfileForm) => {
+    if (!user) return;
+
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success("Profile updated successfully");
+    const supabase = createClient();
+    if (!supabase) {
+      toast.error("Database not available");
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        phone: data.phone || null,
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      toast.error("Failed to update profile");
+    } else {
+      toast.success("Profile updated successfully");
+      setProfile((prev) => prev ? {
+        ...prev,
+        full_name: data.fullName,
+        phone: data.phone || null,
+      } : null);
+    }
     setIsLoading(false);
   };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="container mx-auto flex max-w-4xl items-center justify-center px-4 py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -96,12 +156,12 @@ export default function ProfilePage() {
               {/* Avatar section */}
               <div className="mb-6 flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={mockUser.avatar_url || undefined} />
+                  <AvatarImage src={profile?.avatar_url || undefined} />
                   <AvatarFallback className="text-2xl">
-                    {mockUser.full_name
+                    {profile?.full_name
                       ?.split(" ")
                       .map((n) => n[0])
-                      .join("") || "?"}
+                      .join("") || user?.email?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -150,12 +210,12 @@ export default function ProfilePage() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="(555) 123-4567"
+                    placeholder="0801 234 5678"
                     {...register("phone")}
                     disabled={isLoading}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Used for booking confirmations and reminders
+                    Used for booking confirmations and SMS reminders
                   </p>
                 </div>
 
