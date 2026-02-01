@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { sendBookingNotifications, sendBookingCancellationNotification } from "@/lib/notifications";
 
 export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
 
@@ -363,6 +364,65 @@ export async function createBooking(data: {
     return { success: false, error: itemsError.message };
   }
 
+  // Send notifications (don't block on this)
+  try {
+    // Fetch all the data needed for notifications
+    const [businessResult, staffResult, locationResult, customerResult] = await Promise.all([
+      supabase
+        .from("businesses")
+        .select("name, email, phone, owner_id, profiles!businesses_owner_id_fkey(email, phone)")
+        .eq("id", data.business_id)
+        .single(),
+      supabase
+        .from("staff_members")
+        .select("name")
+        .eq("id", data.staff_id)
+        .single(),
+      supabase
+        .from("locations")
+        .select("address_line1, city, state")
+        .eq("id", data.location_id)
+        .single(),
+      supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", user.id)
+        .single(),
+    ]);
+
+    const business = businessResult.data;
+    const staff = staffResult.data;
+    const location = locationResult.data;
+    const customer = customerResult.data;
+
+    if (business && staff && location && customer) {
+      const ownerProfile = business.profiles as unknown as { email: string; phone: string | null } | null;
+      const totalAmount = data.services.reduce((sum, s) => sum + s.price, 0);
+      const serviceNames = data.services.map(s => s.service_name).join(", ");
+
+      // Send notifications in background (don't await)
+      sendBookingNotifications({
+        bookingId: booking.id,
+        customerName: customer.full_name || customer.email.split("@")[0],
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        businessName: business.name,
+        businessEmail: business.email || ownerProfile?.email || null,
+        businessPhone: business.phone || ownerProfile?.phone || null,
+        serviceName: serviceNames,
+        staffName: staff.name,
+        startTime: startTime,
+        endTime: endTime,
+        totalAmount: totalAmount,
+        currency: "NGN",
+        locationAddress: `${location.address_line1}, ${location.city}, ${location.state}`,
+      }).catch(err => console.error("Failed to send booking notifications:", err));
+    }
+  } catch (notificationError) {
+    // Log but don't fail the booking if notifications fail
+    console.error("Error preparing booking notifications:", notificationError);
+  }
+
   revalidatePath("/customer");
   revalidatePath("/customer/bookings");
   revalidatePath("/merchant/bookings");
@@ -434,6 +494,74 @@ export async function updateBookingStatus(
 
   if (error) {
     return { success: false, error: error.message };
+  }
+
+  // Send cancellation notifications
+  if (status === "cancelled") {
+    try {
+      // Fetch booking details for notification
+      const { data: bookingDetails } = await supabase
+        .from("bookings")
+        .select(`
+          id,
+          start_time,
+          end_time,
+          business:businesses(name, email, phone, owner_id, profiles!businesses_owner_id_fkey(email, phone)),
+          staff:staff_members(name),
+          location:locations(address_line1, city, state),
+          customer:profiles!bookings_customer_id_fkey(full_name, email, phone),
+          items:booking_items(service_name, price)
+        `)
+        .eq("id", bookingId)
+        .single();
+
+      if (bookingDetails) {
+        const business = bookingDetails.business as unknown as {
+          name: string;
+          email: string | null;
+          phone: string | null;
+          profiles: { email: string; phone: string | null } | null;
+        };
+        const staff = bookingDetails.staff as unknown as { name: string };
+        const location = bookingDetails.location as unknown as {
+          address_line1: string;
+          city: string;
+          state: string;
+        };
+        const customer = bookingDetails.customer as unknown as {
+          full_name: string | null;
+          email: string;
+          phone: string | null;
+        };
+        const items = bookingDetails.items as unknown as Array<{ service_name: string; price: number }>;
+
+        const totalAmount = items.reduce((sum, item) => sum + item.price, 0);
+        const serviceNames = items.map(item => item.service_name).join(", ");
+
+        sendBookingCancellationNotification(
+          {
+            bookingId: bookingDetails.id,
+            customerName: customer.full_name || customer.email.split("@")[0],
+            customerEmail: customer.email,
+            customerPhone: customer.phone,
+            businessName: business.name,
+            businessEmail: business.email || business.profiles?.email || null,
+            businessPhone: business.phone || business.profiles?.phone || null,
+            serviceName: serviceNames,
+            staffName: staff.name,
+            startTime: new Date(bookingDetails.start_time),
+            endTime: new Date(bookingDetails.end_time),
+            totalAmount: totalAmount,
+            currency: "NGN",
+            locationAddress: `${location.address_line1}, ${location.city}, ${location.state}`,
+          },
+          isCustomer ? "customer" : "business",
+          reason
+        ).catch(err => console.error("Failed to send cancellation notification:", err));
+      }
+    } catch (notificationError) {
+      console.error("Error preparing cancellation notification:", notificationError);
+    }
   }
 
   revalidatePath("/customer");
