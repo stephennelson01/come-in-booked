@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createBusiness, getMyBusiness } from "@/actions/business";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const BUSINESS_CATEGORIES = [
   "Hair Salon",
@@ -46,7 +46,6 @@ const NIGERIAN_STATES = [
 
 export default function MerchantOnboardingPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState({
@@ -94,17 +93,12 @@ export default function MerchantOnboardingPage() {
     });
 
     if (result.success) {
-      toast({
-        title: "Business created!",
+      toast.success("Business created!", {
         description: "Your business has been set up successfully.",
       });
       router.push("/merchant");
     } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to create business",
-        variant: "destructive",
-      });
+      toast.error(result.error || "Failed to create business");
     }
 
     setIsSubmitting(false);
