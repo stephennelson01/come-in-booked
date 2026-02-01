@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 export interface Business {
@@ -188,6 +189,7 @@ export async function createBusiness(data: {
 }
 
 // Create a business for a newly signed up user (before cookies are set)
+// Uses admin client to bypass RLS since user session isn't established yet
 export async function createBusinessForNewUser(
   userId: string,
   userEmail: string,
@@ -209,7 +211,7 @@ export async function createBusinessForNewUser(
   business?: Business;
   error?: string;
 }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   if (!supabase) {
     return { success: false, error: "Database not configured" };
   }
@@ -219,7 +221,7 @@ export async function createBusinessForNewUser(
 
 // Internal function to create business
 async function createBusinessInternal(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdminClient>>,
   userId: string,
   userEmail: string | undefined,
   data: {
