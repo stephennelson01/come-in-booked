@@ -2,6 +2,9 @@ import twilio from "twilio";
 
 let twilioClient: twilio.Twilio | null = null;
 
+// Alphanumeric Sender ID - shows "ComeInBooked" instead of phone number
+const SENDER_ID = "ComeInBooked";
+
 export function getTwilioClient(): twilio.Twilio | null {
   if (twilioClient) return twilioClient;
 
@@ -17,25 +20,9 @@ export function getTwilioClient(): twilio.Twilio | null {
   return twilioClient;
 }
 
-export function getTwilioFromNumber(): string | null {
-  return process.env.TWILIO_FROM_NUMBER || null;
-}
-
-export async function sendSMS(to: string, message: string): Promise<{
-  success: boolean;
-  messageId?: string;
-  error?: string;
-}> {
-  const client = getTwilioClient();
-  const fromNumber = getTwilioFromNumber();
-
-  if (!client || !fromNumber) {
-    console.warn("Twilio not configured, skipping SMS");
-    return { success: false, error: "SMS service not configured" };
-  }
-
-  // Ensure phone number is in E.164 format
-  let formattedNumber = to.replace(/\s+/g, "").replace(/[^+\d]/g, "");
+// Format phone number to E.164 format (Nigeria)
+function formatPhoneNumber(phone: string): string {
+  let formattedNumber = phone.replace(/\s+/g, "").replace(/[^+\d]/g, "");
 
   // Add Nigeria country code if not present
   if (!formattedNumber.startsWith("+")) {
@@ -48,10 +35,27 @@ export async function sendSMS(to: string, message: string): Promise<{
     }
   }
 
+  return formattedNumber;
+}
+
+export async function sendSMS(to: string, message: string): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}> {
+  const client = getTwilioClient();
+
+  if (!client) {
+    console.warn("Twilio not configured, skipping SMS");
+    return { success: false, error: "SMS service not configured" };
+  }
+
+  const formattedNumber = formatPhoneNumber(to);
+
   try {
     const result = await client.messages.create({
       body: message,
-      from: fromNumber,
+      from: SENDER_ID,
       to: formattedNumber,
     });
 
@@ -61,4 +65,24 @@ export async function sendSMS(to: string, message: string): Promise<{
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: errorMessage };
   }
+}
+
+// Send welcome SMS to new users
+export async function sendWelcomeSMS(to: string, name: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const message = `Welcome to ComeInBooked, ${name}! 🎉 Book appointments with top service providers near you. Visit comeinbooked.com to get started.`;
+
+  return sendSMS(to, message);
+}
+
+// Send welcome SMS to new business owners
+export async function sendBusinessWelcomeSMS(to: string, businessName: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const message = `Welcome to ComeInBooked, ${businessName}! 🎉 Your business is now live. Add services and start accepting bookings at comeinbooked.com/merchant`;
+
+  return sendSMS(to, message);
 }

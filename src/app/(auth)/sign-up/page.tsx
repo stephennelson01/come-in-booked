@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { createBusinessForNewUser } from "@/actions/business";
+import { sendCustomerWelcome, sendBusinessOwnerWelcome } from "@/actions/welcome";
 
 const BUSINESS_CATEGORIES = [
   { value: "hair-salon", label: "Hair Salon" },
@@ -137,6 +138,14 @@ function SignUpFormContent() {
           setIsLoading(false);
           return;
         }
+
+        // Send welcome SMS to business owner
+        if (businessData.phone) {
+          sendBusinessOwnerWelcome(businessData.phone, businessData.businessName);
+        }
+      } else if (data.phone) {
+        // Send welcome SMS to customer
+        sendCustomerWelcome(data.phone, data.fullName);
       }
 
       // Check if user is immediately confirmed (no email verification required)
