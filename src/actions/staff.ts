@@ -207,14 +207,14 @@ export async function createStaffMember(data: {
     await adminClient.from("staff_services").insert(staffServices);
   }
 
-  // Create default availability (Mon-Fri 9-17, Sat 10-16)
+  // Create default availability (Mon-Sat 8am-8pm)
   const defaultAvailability = [
-    { day_of_week: 1, start_time: "09:00", end_time: "17:00" },
-    { day_of_week: 2, start_time: "09:00", end_time: "17:00" },
-    { day_of_week: 3, start_time: "09:00", end_time: "17:00" },
-    { day_of_week: 4, start_time: "09:00", end_time: "17:00" },
-    { day_of_week: 5, start_time: "09:00", end_time: "17:00" },
-    { day_of_week: 6, start_time: "10:00", end_time: "16:00" },
+    { day_of_week: 1, start_time: "08:00", end_time: "20:00" },
+    { day_of_week: 2, start_time: "08:00", end_time: "20:00" },
+    { day_of_week: 3, start_time: "08:00", end_time: "20:00" },
+    { day_of_week: 4, start_time: "08:00", end_time: "20:00" },
+    { day_of_week: 5, start_time: "08:00", end_time: "20:00" },
+    { day_of_week: 6, start_time: "08:00", end_time: "20:00" },
   ];
 
   await adminClient.from("availability_rules").insert(
