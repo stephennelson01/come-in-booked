@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -152,8 +153,14 @@ export async function createService(data: {
     return { success: false, error: "No business found" };
   }
 
+  // Use admin client to bypass RLS for insert (we've already verified ownership above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Get max sort_order
-  const { data: maxSort } = await supabase
+  const { data: maxSort } = await adminClient
     .from("services")
     .select("sort_order")
     .eq("business_id", business.id)
@@ -161,7 +168,7 @@ export async function createService(data: {
     .limit(1)
     .single();
 
-  const { data: service, error } = await supabase
+  const { data: service, error } = await adminClient
     .from("services")
     .insert({
       business_id: business.id,
@@ -232,7 +239,13 @@ export async function updateService(
     return { success: false, error: "Unauthorized" };
   }
 
-  const { error } = await supabase
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
+  const { error } = await adminClient
     .from("services")
     .update(data)
     .eq("id", serviceId);
@@ -274,15 +287,21 @@ export async function deleteService(serviceId: string): Promise<{
     return { success: false, error: "Unauthorized" };
   }
 
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Check if service has any active bookings
-  const { count } = await supabase
+  const { count } = await adminClient
     .from("booking_items")
     .select("*", { count: "exact", head: true })
     .eq("service_id", serviceId);
 
   if (count && count > 0) {
     // Soft delete by deactivating
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("services")
       .update({ is_active: false })
       .eq("id", serviceId);
@@ -292,7 +311,7 @@ export async function deleteService(serviceId: string): Promise<{
     }
   } else {
     // Hard delete if no bookings
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("services")
       .delete()
       .eq("id", serviceId);
@@ -336,9 +355,15 @@ export async function toggleServiceActive(serviceId: string): Promise<{
     return { success: false, error: "Unauthorized" };
   }
 
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   const newStatus = !service.is_active;
 
-  const { error } = await supabase
+  const { error } = await adminClient
     .from("services")
     .update({ is_active: newStatus })
     .eq("id", serviceId);
