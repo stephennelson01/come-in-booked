@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -172,7 +173,13 @@ export async function createStaffMember(data: {
     return { success: false, error: "No business found" };
   }
 
-  const { data: staff, error } = await supabase
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
+  const { data: staff, error } = await adminClient
     .from("staff_members")
     .insert({
       business_id: business.id,
@@ -197,7 +204,7 @@ export async function createStaffMember(data: {
       service_id,
     }));
 
-    await supabase.from("staff_services").insert(staffServices);
+    await adminClient.from("staff_services").insert(staffServices);
   }
 
   // Create default availability (Mon-Fri 9-17, Sat 10-16)
@@ -210,7 +217,7 @@ export async function createStaffMember(data: {
     { day_of_week: 6, start_time: "10:00", end_time: "16:00" },
   ];
 
-  await supabase.from("availability_rules").insert(
+  await adminClient.from("availability_rules").insert(
     defaultAvailability.map((rule) => ({
       staff_id: staff.id,
       ...rule,
@@ -260,11 +267,17 @@ export async function updateStaffMember(
     return { success: false, error: "Unauthorized" };
   }
 
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Extract service_ids from data
   const { service_ids, ...staffData } = data;
 
   if (Object.keys(staffData).length > 0) {
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("staff_members")
       .update(staffData)
       .eq("id", staffId);
@@ -277,7 +290,7 @@ export async function updateStaffMember(
   // Update service relationships if provided
   if (service_ids !== undefined) {
     // Remove existing relationships
-    await supabase.from("staff_services").delete().eq("staff_id", staffId);
+    await adminClient.from("staff_services").delete().eq("staff_id", staffId);
 
     // Add new relationships
     if (service_ids.length > 0) {
@@ -286,7 +299,7 @@ export async function updateStaffMember(
         service_id,
       }));
 
-      await supabase.from("staff_services").insert(staffServices);
+      await adminClient.from("staff_services").insert(staffServices);
     }
   }
 
@@ -323,15 +336,21 @@ export async function deleteStaffMember(staffId: string): Promise<{
     return { success: false, error: "Unauthorized" };
   }
 
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Check if staff has any bookings
-  const { count } = await supabase
+  const { count } = await adminClient
     .from("bookings")
     .select("*", { count: "exact", head: true })
     .eq("staff_id", staffId);
 
   if (count && count > 0) {
     // Soft delete by deactivating
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("staff_members")
       .update({ is_active: false })
       .eq("id", staffId);
@@ -341,7 +360,7 @@ export async function deleteStaffMember(staffId: string): Promise<{
     }
   } else {
     // Hard delete if no bookings
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("staff_members")
       .delete()
       .eq("id", staffId);
@@ -414,8 +433,14 @@ export async function updateStaffAvailability(
     return { success: false, error: "Unauthorized" };
   }
 
+  // Use admin client to bypass RLS (ownership verified above)
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return { success: false, error: "Database not configured" };
+  }
+
   // Delete existing availability
-  await supabase.from("availability_rules").delete().eq("staff_id", staffId);
+  await adminClient.from("availability_rules").delete().eq("staff_id", staffId);
 
   // Insert new availability
   const rules = availability.map((rule) => ({
@@ -426,7 +451,7 @@ export async function updateStaffAvailability(
     is_active: rule.is_active,
   }));
 
-  const { error } = await supabase.from("availability_rules").insert(rules);
+  const { error } = await adminClient.from("availability_rules").insert(rules);
 
   if (error) {
     return { success: false, error: error.message };
