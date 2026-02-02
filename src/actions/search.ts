@@ -43,7 +43,8 @@ export async function searchBusinesses(params: {
       category,
       cover_image_url,
       locations!inner(city, state, latitude, longitude, is_primary),
-      reviews(rating)
+      reviews(rating),
+      services(image_url, is_active, sort_order)
     `)
     .eq("is_active", true)
     .eq("locations.is_primary", true);
@@ -76,13 +77,19 @@ export async function searchBusinesses(params: {
         ? reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviews.length
         : null;
 
+    // Use first service image as fallback if no cover image
+    const services = (b.services || [])
+      .filter((s: { is_active: boolean; image_url: string | null }) => s.is_active && s.image_url)
+      .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
+    const firstServiceImage = services[0]?.image_url || null;
+
     return {
       id: b.id,
       slug: b.slug,
       name: b.name,
       description: b.description,
       category: b.category,
-      cover_image_url: b.cover_image_url,
+      cover_image_url: b.cover_image_url || firstServiceImage,
       rating: avgRating ? Math.round(avgRating * 10) / 10 : null,
       review_count: reviews.length,
       location: primaryLocation
