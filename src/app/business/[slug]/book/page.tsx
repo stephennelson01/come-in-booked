@@ -63,6 +63,7 @@ export default function BookingPage() {
   const [business, setBusiness] = React.useState<BusinessData | null>(null);
   const [timeSlots, setTimeSlots] = React.useState<string[]>([]);
   const [isSlotsLoading, setIsSlotsLoading] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState<"online" | "in_person">("online");
 
   const service = business?.services.find((s) => s.id === selectedService);
   const staff = business?.staff.find((s) => s.id === selectedStaff);
@@ -174,7 +175,14 @@ export default function BookingPage() {
     if (result.success && result.booking) {
       setBookingId(result.booking.id);
 
-      // Create payment intent
+      // If pay in person, skip payment step
+      if (paymentMethod === "in_person") {
+        toast.success("Booking confirmed! Pay at the venue after your appointment.");
+        router.push("/customer");
+        return;
+      }
+
+      // Create payment intent for online payment
       try {
         const amountInKobo = Number(service.price) * 100;
         const paymentResult = await createPaymentIntent({
@@ -512,6 +520,62 @@ export default function BookingPage() {
                   </div>
                 </div>
 
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">How would you like to pay?</h4>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setPaymentMethod("online")}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                        paymentMethod === "online"
+                          ? "border-primary bg-primary/5"
+                          : "hover:border-primary/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2",
+                        paymentMethod === "online" ? "border-primary bg-primary" : "border-muted-foreground"
+                      )}>
+                        {paymentMethod === "online" && (
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">Pay Now</p>
+                        <p className="text-sm text-muted-foreground">
+                          Pay securely online with card
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setPaymentMethod("in_person")}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                        paymentMethod === "in_person"
+                          ? "border-primary bg-primary/5"
+                          : "hover:border-primary/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border-2",
+                        paymentMethod === "in_person" ? "border-primary bg-primary" : "border-muted-foreground"
+                      )}>
+                        {paymentMethod === "in_person" && (
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">Pay in Person</p>
+                        <p className="text-sm text-muted-foreground">
+                          Pay at the venue after your appointment
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
                 <p className="text-sm text-muted-foreground">
                   By confirming this booking, you agree to our cancellation
                   policy. You can cancel or reschedule up to 24 hours before
@@ -625,7 +689,7 @@ export default function BookingPage() {
         {step === "confirm" ? (
           <Button onClick={handleConfirm} disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirm & Pay
+            {paymentMethod === "online" ? "Confirm & Pay" : "Confirm Booking"}
           </Button>
         ) : (
           <Button onClick={handleNext} disabled={!canProceed()}>
