@@ -2,9 +2,6 @@ import twilio from "twilio";
 
 let twilioClient: twilio.Twilio | null = null;
 
-// Alphanumeric Sender ID - shows "ComeInBooked" instead of phone number
-const SENDER_ID = "ComeInBooked";
-
 export function getTwilioClient(): twilio.Twilio | null {
   if (twilioClient) return twilioClient;
 
@@ -18,6 +15,10 @@ export function getTwilioClient(): twilio.Twilio | null {
 
   twilioClient = twilio(accountSid, authToken);
   return twilioClient;
+}
+
+export function getTwilioFromNumber(): string | null {
+  return process.env.TWILIO_FROM_NUMBER || null;
 }
 
 // Format phone number to E.164 format (Nigeria)
@@ -44,8 +45,9 @@ export async function sendSMS(to: string, message: string): Promise<{
   error?: string;
 }> {
   const client = getTwilioClient();
+  const fromNumber = getTwilioFromNumber();
 
-  if (!client) {
+  if (!client || !fromNumber) {
     console.warn("Twilio not configured, skipping SMS");
     return { success: false, error: "SMS service not configured" };
   }
@@ -55,7 +57,7 @@ export async function sendSMS(to: string, message: string): Promise<{
   try {
     const result = await client.messages.create({
       body: message,
-      from: SENDER_ID,
+      from: fromNumber,
       to: formattedNumber,
     });
 
