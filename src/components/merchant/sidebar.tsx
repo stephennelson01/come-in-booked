@@ -16,6 +16,7 @@ import {
   Menu,
   Bell,
   Check,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const sidebarLinks = [
   { href: "/merchant/services", label: "Services", icon: Scissors },
   { href: "/merchant/staff", label: "Staff", icon: Users },
   { href: "/merchant/clients", label: "Clients", icon: UserCircle },
+  { href: "/merchant/reviews", label: "Reviews", icon: Star },
   { href: "/merchant/settings", label: "Settings", icon: Settings },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Store, CreditCard, Bell, Clock } from "lucide-react";
+import { Loader2, Store, CreditCard, Bell, Clock, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +11,42 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { getMyBusiness, updateBusiness, updateLocation, type Business, type Location } from "@/actions/business";
 import { createConnectAccount, createConnectAccountLink } from "@/actions/stripe";
+import {
+  getBusinessHours,
+  updateBusinessHours,
+  DEFAULT_BUSINESS_HOURS,
+  DAY_NAMES,
+  type BusinessHours,
+} from "@/actions/hours";
+
+// Generate time options for select dropdowns
+const generateTimeOptions = () => {
+  const options = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (const minute of [0, 30]) {
+      const timeStr = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+      const displayStr = new Date(2000, 0, 1, hour, minute).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+      options.push({ value: timeStr, label: displayStr });
+    }
+  }
+  return options;
+};
+
+const TIME_OPTIONS = generateTimeOptions();
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -39,6 +72,10 @@ export default function SettingsPage() {
   const [emailReminders, setEmailReminders] = React.useState(true);
   const [smsReminders, setSmsReminders] = React.useState(true);
   const [isConnecting, setIsConnecting] = React.useState(false);
+
+  // Business hours state
+  const [businessHours, setBusinessHours] = React.useState<BusinessHours[]>(DEFAULT_BUSINESS_HOURS);
+  const [isSavingHours, setIsSavingHours] = React.useState(false);
 
   const handleStripeConnect = async () => {
     if (!business) return;
@@ -83,10 +120,14 @@ export default function SettingsPage() {
 
   const loadBusiness = async () => {
     setIsLoading(true);
-    const result = await getMyBusiness();
 
-    if (result.success && result.business) {
-      const biz = result.business;
+    const [businessResult, hoursResult] = await Promise.all([
+      getMyBusiness(),
+      getBusinessHours(),
+    ]);
+
+    if (businessResult.success && businessResult.business) {
+      const biz = businessResult.business;
       setBusiness(biz);
       setName(biz.name);
       setCategory(biz.category);
@@ -103,7 +144,34 @@ export default function SettingsPage() {
       }
     }
 
+    if (hoursResult.success && hoursResult.hours) {
+      setBusinessHours(hoursResult.hours);
+    }
+
     setIsLoading(false);
+  };
+
+  const handleSaveHours = async () => {
+    setIsSavingHours(true);
+    const result = await updateBusinessHours(businessHours);
+    if (result.success) {
+      toast.success("Business hours updated");
+    } else {
+      toast.error(result.error || "Failed to update business hours");
+    }
+    setIsSavingHours(false);
+  };
+
+  const updateDayHours = (
+    dayOfWeek: number,
+    field: keyof BusinessHours,
+    value: boolean | string
+  ) => {
+    setBusinessHours((prev) =>
+      prev.map((h) =>
+        h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h
+      )
+    );
   };
 
   const handleSave = async () => {
@@ -177,10 +245,14 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="business" className="w-full">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="business" className="flex items-center gap-2">
             <Store className="h-4 w-4" />
             Business
+          </TabsTrigger>
+          <TabsTrigger value="hours" className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            Hours
           </TabsTrigger>
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
@@ -305,6 +377,89 @@ export default function SettingsPage() {
                 <Button onClick={handleSave} disabled={isSaving}>
                   {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hours">
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Hours</CardTitle>
+              <CardDescription>
+                Set your operating hours for each day of the week. These hours apply to all staff members.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {businessHours.map((day) => (
+                <div
+                  key={day.dayOfWeek}
+                  className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={day.isOpen}
+                      onCheckedChange={(checked) =>
+                        updateDayHours(day.dayOfWeek, "isOpen", checked)
+                      }
+                    />
+                    <span className="w-24 font-medium">
+                      {DAY_NAMES[day.dayOfWeek]}
+                    </span>
+                    {!day.isOpen && (
+                      <span className="text-sm text-muted-foreground">
+                        Closed
+                      </span>
+                    )}
+                  </div>
+
+                  {day.isOpen && (
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={day.openTime}
+                        onValueChange={(value) =>
+                          updateDayHours(day.dayOfWeek, "openTime", value)
+                        }
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIME_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-muted-foreground">to</span>
+                      <Select
+                        value={day.closeTime}
+                        onValueChange={(value) =>
+                          updateDayHours(day.dayOfWeek, "closeTime", value)
+                        }
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIME_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveHours} disabled={isSavingHours}>
+                  {isSavingHours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Hours
                 </Button>
               </div>
             </CardContent>

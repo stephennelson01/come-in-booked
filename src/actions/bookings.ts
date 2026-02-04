@@ -703,6 +703,93 @@ export async function getAvailableSlots(data: {
   };
 }
 
+// Reschedule a booking
+export async function rescheduleBooking(
+  bookingId: string,
+  newStartTime: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, error: "Database not configured" };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // Get the existing booking
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select(`
+      *,
+      business:businesses(owner_id),
+      items:booking_items(duration_minutes)
+    `)
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking) {
+    return { success: false, error: "Booking not found" };
+  }
+
+  const isCustomer = booking.customer_id === user.id;
+  const biz = booking.business as unknown as { owner_id: string } | null;
+  const isOwner = biz?.owner_id === user.id;
+
+  if (!isCustomer && !isOwner) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // Check booking status
+  if (booking.status === "cancelled" || booking.status === "completed" || booking.status === "no_show") {
+    return { success: false, error: "Cannot reschedule this booking" };
+  }
+
+  // Calculate new end time based on total duration
+  const items = booking.items as unknown as Array<{ duration_minutes: number }>;
+  const totalDuration = items?.reduce((sum, item) => sum + item.duration_minutes, 0) || 60;
+  const startTime = new Date(newStartTime);
+  const endTime = new Date(startTime.getTime() + totalDuration * 60 * 1000);
+
+  // Check for conflicting bookings
+  const { data: conflicts } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("staff_id", booking.staff_id)
+    .neq("id", bookingId)
+    .not("status", "in", "(cancelled,no_show)")
+    .or(`and(start_time.lt.${endTime.toISOString()},end_time.gt.${startTime.toISOString()})`);
+
+  if (conflicts && conflicts.length > 0) {
+    return { success: false, error: "This time slot is no longer available" };
+  }
+
+  // Update the booking
+  const { error } = await supabase
+    .from("bookings")
+    .update({
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      status: "pending", // Reset to pending for re-confirmation
+    })
+    .eq("id", bookingId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/customer");
+  revalidatePath("/customer/bookings");
+  revalidatePath("/merchant/bookings");
+  revalidatePath("/merchant/calendar");
+
+  return { success: true };
+}
+
 // Get recent bookings count for notifications
 export async function getRecentBookingsCount(): Promise<{
   success: boolean;

@@ -2,34 +2,46 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, subWeeks, isWithinInterval } from "date-fns";
 import {
   Calendar,
   Users,
   TrendingUp,
+  TrendingDown,
   Clock,
   ChevronRight,
   Loader2,
   Scissors,
+  Star,
+  DollarSign,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { getBusinessBookings, type BookingWithDetails } from "@/actions/bookings";
-import { getMyServices } from "@/actions/services";
+import { getMyServices, type Service } from "@/actions/services";
 import { getMyStaff } from "@/actions/staff";
+import { getMyBusinessReviews } from "@/actions/reviews";
 
 export default function MerchantDashboard() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [todayBookings, setTodayBookings] = React.useState<BookingWithDetails[]>([]);
   const [recentBookings, setRecentBookings] = React.useState<BookingWithDetails[]>([]);
+  const [services, setServices] = React.useState<Service[]>([]);
   const [stats, setStats] = React.useState({
     todayCount: 0,
     monthRevenue: 0,
+    lastMonthRevenue: 0,
+    thisWeekBookings: 0,
+    lastWeekBookings: 0,
     totalClients: 0,
     totalServices: 0,
     totalStaff: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    popularServices: [] as Array<{ name: string; count: number }>,
   });
 
   React.useEffect(() => {
@@ -40,10 +52,11 @@ export default function MerchantDashboard() {
     setIsLoading(true);
 
     // Fetch all data in parallel
-    const [bookingsResult, servicesResult, staffResult] = await Promise.all([
+    const [bookingsResult, servicesResult, staffResult, reviewsResult] = await Promise.all([
       getBusinessBookings(),
       getMyServices(),
       getMyStaff(),
+      getMyBusinessReviews(),
     ]);
 
     if (bookingsResult.success && bookingsResult.bookings) {
@@ -65,6 +78,9 @@ export default function MerchantDashboard() {
 
       // Calculate month's revenue
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+
       const monthBookings = allBookings.filter((b) => {
         const bookingDate = new Date(b.start_time);
         return bookingDate >= monthStart && (b.status === "completed" || b.status === "confirmed");
@@ -74,18 +90,60 @@ export default function MerchantDashboard() {
         0
       );
 
+      const lastMonthBookings = allBookings.filter((b) => {
+        const bookingDate = new Date(b.start_time);
+        return bookingDate >= lastMonthStart && bookingDate <= lastMonthEnd && (b.status === "completed" || b.status === "confirmed");
+      });
+      const lastMonthRevenue = lastMonthBookings.reduce(
+        (sum, b) => sum + (b.items?.reduce((s, item) => s + Number(item.price), 0) || 0),
+        0
+      );
+
+      // This week vs last week bookings
+      const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+      const thisWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+      const lastWeekStart = subWeeks(thisWeekStart, 1);
+      const lastWeekEnd = subWeeks(thisWeekEnd, 1);
+
+      const thisWeekBookings = allBookings.filter((b) => {
+        const bookingDate = new Date(b.start_time);
+        return isWithinInterval(bookingDate, { start: thisWeekStart, end: thisWeekEnd }) && b.status !== "cancelled";
+      }).length;
+
+      const lastWeekBookings = allBookings.filter((b) => {
+        const bookingDate = new Date(b.start_time);
+        return isWithinInterval(bookingDate, { start: lastWeekStart, end: lastWeekEnd }) && b.status !== "cancelled";
+      }).length;
+
       // Unique customers
       const uniqueCustomers = new Set(allBookings.map((b) => b.customer_id));
+
+      // Popular services
+      const serviceCounts = new Map<string, number>();
+      allBookings.forEach((b) => {
+        b.items?.forEach((item) => {
+          serviceCounts.set(item.service_name, (serviceCounts.get(item.service_name) || 0) + 1);
+        });
+      });
+      const popularServices = Array.from(serviceCounts.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
 
       setStats((prev) => ({
         ...prev,
         todayCount: todaysBookings.length,
         monthRevenue,
+        lastMonthRevenue,
+        thisWeekBookings,
+        lastWeekBookings,
         totalClients: uniqueCustomers.size,
+        popularServices,
       }));
     }
 
     if (servicesResult.success && servicesResult.services) {
+      setServices(servicesResult.services.filter((s) => s.is_active));
       setStats((prev) => ({
         ...prev,
         totalServices: servicesResult.services!.filter((s) => s.is_active).length,
@@ -96,6 +154,14 @@ export default function MerchantDashboard() {
       setStats((prev) => ({
         ...prev,
         totalStaff: staffResult.staff!.filter((s) => s.is_active).length,
+      }));
+    }
+
+    if (reviewsResult.success) {
+      setStats((prev) => ({
+        ...prev,
+        averageRating: reviewsResult.averageRating || 0,
+        totalReviews: reviewsResult.totalCount || 0,
       }));
     }
 
@@ -110,28 +176,13 @@ export default function MerchantDashboard() {
     );
   }
 
-  const statCards = [
-    {
-      title: "Today's Bookings",
-      value: stats.todayCount.toString(),
-      icon: Calendar,
-    },
-    {
-      title: "This Month's Revenue",
-      value: `₦${stats.monthRevenue.toLocaleString()}`,
-      icon: TrendingUp,
-    },
-    {
-      title: "Total Clients",
-      value: stats.totalClients.toString(),
-      icon: Users,
-    },
-    {
-      title: "Active Services",
-      value: stats.totalServices.toString(),
-      icon: Scissors,
-    },
-  ];
+  const weekOverWeekChange = stats.lastWeekBookings > 0
+    ? Math.round(((stats.thisWeekBookings - stats.lastWeekBookings) / stats.lastWeekBookings) * 100)
+    : stats.thisWeekBookings > 0 ? 100 : 0;
+
+  const monthOverMonthChange = stats.lastMonthRevenue > 0
+    ? Math.round(((stats.monthRevenue - stats.lastMonthRevenue) / stats.lastMonthRevenue) * 100)
+    : stats.monthRevenue > 0 ? 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -145,19 +196,80 @@ export default function MerchantDashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Today&apos;s Bookings
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.todayCount}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.thisWeekBookings} this week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              This Month&apos;s Revenue
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₦{stats.monthRevenue.toLocaleString()}</div>
+            <div className="flex items-center gap-1 text-xs">
+              {monthOverMonthChange >= 0 ? (
+                <TrendingUp className="h-3 w-3 text-green-500" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-500" />
+              )}
+              <span className={monthOverMonthChange >= 0 ? "text-green-500" : "text-red-500"}>
+                {monthOverMonthChange >= 0 ? "+" : ""}{monthOverMonthChange}%
+              </span>
+              <span className="text-muted-foreground">vs last month</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Average Rating
+            </CardTitle>
+            <Star className="h-4 w-4 text-yellow-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold">
+                {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "—"}
+              </span>
+              {stats.averageRating > 0 && (
+                <span className="text-sm text-muted-foreground">/ 5</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalReviews} {stats.totalReviews === 1 ? "review" : "reviews"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Clients
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalClients}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.totalServices} services · {stats.totalStaff} staff
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -310,6 +422,36 @@ export default function MerchantDashboard() {
         </Card>
       </div>
 
+      {/* Popular Services */}
+      {stats.popularServices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Popular Services</CardTitle>
+            <CardDescription>Your most booked services</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.popularServices.map((service, index) => {
+                const maxCount = stats.popularServices[0].count;
+                const percentage = (service.count / maxCount) * 100;
+                return (
+                  <div key={service.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <span className="text-muted-foreground">#{index + 1}</span>
+                        <span className="font-medium">{service.name}</span>
+                      </span>
+                      <span className="text-muted-foreground">{service.count} bookings</span>
+                    </div>
+                    <Progress value={percentage} className="h-2" />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -325,6 +467,9 @@ export default function MerchantDashboard() {
             </Button>
             <Button variant="outline" asChild>
               <Link href="/merchant/calendar">View Calendar</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/merchant/reviews">View Reviews</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/merchant/settings">Settings</Link>
