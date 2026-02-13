@@ -17,6 +17,7 @@ import {
   Bell,
   Check,
   Star,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const sidebarLinks = [
   { href: "/merchant/staff", label: "Staff", icon: Users },
   { href: "/merchant/clients", label: "Clients", icon: UserCircle },
   { href: "/merchant/reviews", label: "Reviews", icon: Star },
+  { href: "/merchant/qr", label: "QR Code", icon: QrCode },
   { href: "/merchant/settings", label: "Settings", icon: Settings },
 ];
 
